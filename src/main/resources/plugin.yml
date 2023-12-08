@@ -1,8 +1,6 @@
 name: AnvilLogin
 version: ${project.version}
 main: io.github.portlek.anvillogin.AnvilLogin
-authors: [portlek]
-description: Login and register with anvil gui
-api-version: 1.13
-depend:
-  - AuthMe
+authors: [portlek, vcele]
+description: Login into server with anvil gui and global password.
+api-version: 1.20
