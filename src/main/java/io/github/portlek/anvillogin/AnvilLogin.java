@@ -1,6 +1,11 @@
 package io.github.portlek.anvillogin;
 
 import net.wesjd.anvilgui.AnvilGUI;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,17 +21,28 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
 
     private String wrongPassword;
 
+    private ArrayList<String> knownPlayers;
+
     @Override
     public void onEnable() {
-        //saves the default config if it doesn't exist
+        // saves the default config if it doesn't exist
         this.saveDefaultConfig();
-        //loads the config
+        // loads the config
         this.password = this.getConfig().getString("password");
         this.insert = this.c(this.getConfig().getString("insert"));
         this.wrongPassword = this.c(this.getConfig().getString("wrong-password"));
-        //registers the listener
+        // load knownplayers from config
+        this.knownPlayers = (ArrayList<String>) this.getConfig().getStringList("known-players");
+        // registers the listener
         this.getServer().getPluginManager().registerEvents(this, this);
         this.getServer().getOnlinePlayers().forEach(this::ask);
+    }
+
+    @Override
+    public void onDisable() {
+        // saves knownplayers to config
+        this.getConfig().set("known-players", this.knownPlayers);
+        this.saveConfig();
     }
 
     private String c(final String text) {
@@ -34,27 +50,31 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
     }
 
     private void ask(final Player player) {
-            this.openLogin(player); // todo: check if player already logged in once
+        if (this.knownPlayers.contains(player.getName())) { // if the player is known, don't ask for password
+            return;
+        }
+        this.openLogin(player);
     }
 
     private void openLogin(final Player p) {
-        final AnvilGUI.Builder builder = new AnvilGUI.Builder()
-            .onComplete((player, s) -> {
-                if (!s.equals(this.password)) {
-                    return AnvilGUI.Response.text(this.wrongPassword);
-                }
-                this.authmeApi.forceLogin(player);
-                return AnvilGUI.Response.close();
-            })
-            .preventClose()
-            .text(this.insert)
-            .plugin(this);
+        new AnvilGUI.Builder()
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
 
-        this.getServer().getScheduler().runTask(this, () -> builder.open(p));
+                    if (!stateSnapshot.getText().equalsIgnoreCase(this.password)) {
+                        return Arrays.asList(AnvilGUI.ResponseAction.replaceInputText(this.wrongPassword));
+                    } else {
+                        this.knownPlayers.add(p.getName());
+                        stateSnapshot.getPlayer().sendMessage(ChatColor.GREEN + "You have logged in successfully!");
+                        return Arrays.asList(AnvilGUI.ResponseAction.close());
+                    }
+                }).preventClose().text(this.insert).plugin(this).open(p);
     }
 
     @EventHandler
-    public void join(final PlayerJoinEvent event) {
+    public void join(final PlayerJoinEvent event) { // asks for password when player joins
         this.ask(event.getPlayer());
     }
 
