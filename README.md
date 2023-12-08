@@ -1,2 +1,2 @@
 # anvil-login
-anvil gui for login-register
+anvil gui for login with a single password
