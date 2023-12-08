@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class AnvilLogin extends JavaPlugin implements Listener {
 
-    private AuthMeApi authmeApi;
+    private String password;
 
     private String insert;
 
@@ -18,13 +18,13 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        if (this.getServer().getPluginManager().getPlugin("AuthMe") == null) {
-            return;
-        }
-        this.authmeApi = AuthMeApi.getInstance();
+        //saves the default config if it doesn't exist
         this.saveDefaultConfig();
+        //loads the config
+        this.password = this.getConfig().getString("password");
         this.insert = this.c(this.getConfig().getString("insert"));
         this.wrongPassword = this.c(this.getConfig().getString("wrong-password"));
+        //registers the listener
         this.getServer().getPluginManager().registerEvents(this, this);
         this.getServer().getOnlinePlayers().forEach(this::ask);
     }
@@ -34,15 +34,13 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
     }
 
     private void ask(final Player player) {
-        if (this.authmeApi.isRegistered(player.getName())) {
-            this.openLogin(player);
-        }
+            this.openLogin(player); // todo: check if player already logged in once
     }
 
     private void openLogin(final Player p) {
         final AnvilGUI.Builder builder = new AnvilGUI.Builder()
             .onComplete((player, s) -> {
-                if (!this.authmeApi.checkPassword(player.getName(), s)) {
+                if (!s.equals(this.password)) {
                     return AnvilGUI.Response.text(this.wrongPassword);
                 }
                 this.authmeApi.forceLogin(player);
