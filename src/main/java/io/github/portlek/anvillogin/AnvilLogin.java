@@ -1,6 +1,5 @@
 package io.github.portlek.anvillogin;
 
-import fr.xephi.authme.api.v3.AuthMeApi;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -37,8 +36,6 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
     private void ask(final Player player) {
         if (this.authmeApi.isRegistered(player.getName())) {
             this.openLogin(player);
-        } else {
-            this.openRegister(player);
         }
     }
 
@@ -49,22 +46,6 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
                     return AnvilGUI.Response.text(this.wrongPassword);
                 }
                 this.authmeApi.forceLogin(player);
-                return AnvilGUI.Response.close();
-            })
-            .preventClose()
-            .text(this.insert)
-            .plugin(this);
-
-        this.getServer().getScheduler().runTask(this, () -> builder.open(p));
-    }
-
-    private void openRegister(final Player p) {
-        final AnvilGUI.Builder builder = new AnvilGUI.Builder()
-            .onComplete((player, s) -> {
-                this.authmeApi.registerPlayer(player.getName(), s);
-                if (!this.authmeApi.isAuthenticated(player)) {
-                    this.authmeApi.forceLogin(player);
-                }
                 return AnvilGUI.Response.close();
             })
             .preventClose()
