@@ -50,7 +50,7 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
     }
 
     private void ask(final Player player) {
-        if (this.knownPlayers.contains(player.getName())) { // if the player is known, don't ask for password
+        if (this.knownPlayers.contains(player.getUniqueId().toString())) { // if the player is known, don't ask for password
             return;
         }
         this.openLogin(player);
@@ -66,7 +66,7 @@ public final class AnvilLogin extends JavaPlugin implements Listener {
                     if (!stateSnapshot.getText().equalsIgnoreCase(this.password)) {
                         return Arrays.asList(AnvilGUI.ResponseAction.replaceInputText(this.wrongPassword));
                     } else {
-                        this.knownPlayers.add(p.getName());
+                        this.knownPlayers.add(p.getUniqueId().toString());
                         stateSnapshot.getPlayer().sendMessage(ChatColor.GREEN + "You have logged in successfully!");
                         return Arrays.asList(AnvilGUI.ResponseAction.close());
                     }
